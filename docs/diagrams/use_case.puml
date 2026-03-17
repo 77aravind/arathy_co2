@@ -1,0 +1,66 @@
+@startuml Use_Case_Diagram
+title Use Case Diagram — CO2 Tracker Application
+
+left to right direction
+skinparam usecase {
+  BackgroundColor #E8F5E9
+  BorderColor #2E7D32
+  FontSize 12
+}
+skinparam actor {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+  FontSize 12
+}
+
+actor "User" as User
+actor "Firebase Auth" as FireAuth
+actor "GPS / Location\nService" as GPS
+actor "ML Kit\n(OCR)" as OCR
+
+rectangle "CO2 Tracker Application" {
+  usecase "Register Account" as UC1
+  usecase "Login / Logout" as UC2
+  usecase "Reset Password" as UC3
+  usecase "Log Transport Activity" as UC4
+  usecase "Log Energy Consumption" as UC5
+  usecase "Log Dietary Activity" as UC6
+  usecase "Scan Utility Bill (OCR)" as UC7
+  usecase "Auto-Track Trip Distance" as UC8
+  usecase "View Dashboard & Charts" as UC9
+  usecase "View Emission History" as UC10
+  usecase "Get Personalised Tips" as UC11
+  usecase "Earn Achievements / Badges" as UC12
+  usecase "View Profile" as UC13
+}
+
+User --> UC1
+User --> UC2
+User --> UC3
+User --> UC4
+User --> UC5
+User --> UC6
+User --> UC7
+User --> UC8
+User --> UC9
+User --> UC10
+User --> UC11
+User --> UC12
+User --> UC13
+
+UC1 --> FireAuth : <<uses>>
+UC2 --> FireAuth : <<uses>>
+UC3 --> FireAuth : <<uses>>
+
+UC7 --> OCR : <<uses>>
+UC8 --> GPS  : <<uses>>
+
+UC4 .> UC9 : <<extend>>
+UC5 .> UC9 : <<extend>>
+UC6 .> UC9 : <<extend>>
+UC7 .> UC9 : <<extend>>
+UC8 .> UC4 : <<include>>
+UC9 .> UC12 : <<include>>
+UC9 .> UC11 : <<include>>
+
+@enduml

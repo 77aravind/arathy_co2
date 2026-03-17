@@ -1,0 +1,74 @@
+@startuml DFD_Level1
+title Level 1 DFD — CO2 Tracker Application
+
+skinparam rectangle {
+  BackgroundColor #FFF9C4
+  BorderColor #F9A825
+  FontSize 12
+}
+skinparam database {
+  BackgroundColor #FCE4EC
+  BorderColor #C62828
+}
+skinparam actor {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+}
+skinparam arrow {
+  Color #37474F
+  FontSize 10
+}
+
+actor "User" as User
+actor "Firebase Auth" as FireAuth
+actor "GPS Service" as GPS
+actor "ML Kit OCR" as OCR
+
+rectangle "1.0\nAuthentication\nModule" as Auth
+rectangle "2.0\nActivity Logging\nModule" as ActivityLog
+rectangle "3.0\nAutomated Bill\nScanning Module" as Scanner
+rectangle "4.0\nLocation Tracking\nModule" as Location
+rectangle "5.0\nDashboard &\nAnalytics Module" as Dashboard
+rectangle "6.0\nAchievements\nModule" as Achievements
+
+database "D1: User\nProfiles" as DB_Users
+database "D2: Activity\nLogs" as DB_Activity
+database "D3: Carbon\nFactors" as DB_Carbon
+database "D4: Achievements\nData" as DB_Achieve
+
+' Authentication flows
+User --> Auth : Credentials\n(email/phone)
+Auth --> FireAuth : Auth request
+FireAuth --> Auth : Token / Error
+Auth --> DB_Users : Store profile
+Auth --> Dashboard : Authenticated session
+
+' Activity Logging flows
+User --> ActivityLog : Transport/\nEnergy/Diet data
+ActivityLog --> DB_Carbon : Fetch emission factors
+DB_Carbon --> ActivityLog : kg CO2/unit
+ActivityLog --> DB_Activity : Save emission record
+ActivityLog --> Dashboard : Updated emission totals
+
+' Scanner flows
+User --> Scanner : Bill image
+Scanner --> OCR : Image data
+OCR --> Scanner : Extracted text & usage values
+Scanner --> DB_Activity : Save bill-based record
+
+' Location flows
+User --> Location : Start trip
+Location --> GPS : Location request
+GPS --> Location : Coordinates
+Location --> ActivityLog : Calculated distance
+
+' Dashboard flows
+Dashboard --> DB_Activity : Fetch emission history
+Dashboard --> User : Charts, graphs,\ninsights, tips
+
+' Achievements flows
+DB_Activity --> Achievements : Emission milestones
+Achievements --> DB_Achieve : Update badges
+Achievements --> User : Badge unlocked notification
+
+@enduml

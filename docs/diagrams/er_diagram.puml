@@ -1,0 +1,100 @@
+@startuml ER_Diagram
+title Entity-Relationship Diagram — CO2 Tracker Application
+
+skinparam entity {
+  BackgroundColor #E3F2FD
+  BorderColor #1565C0
+  FontSize 12
+}
+skinparam arrow {
+  Color #37474F
+}
+
+entity "USER" as User {
+  * **userId** : String <<PK>>
+  --
+  email       : String
+  phoneNumber : String
+  displayName : String
+  photoUrl    : String
+  createdAt   : Timestamp
+  countryCode : String
+}
+
+entity "ACTIVITY_LOG" as Activity {
+  * **logId**     : String <<PK>>
+  --
+  userId        : String <<FK>>
+  activityType  : Enum\n(transport/energy/diet)
+  subType       : String\n(car/electricity/beef…)
+  inputValue    : Double
+  inputUnit     : String\n(km/kWh/kg)
+  co2Kg         : Double
+  source        : Enum\n(manual/ocr/gps)
+  loggedAt      : Timestamp
+}
+
+entity "EMISSION_FACTOR" as Factor {
+  * **factorId**   : String <<PK>>
+  --
+  activityType  : Enum
+  subType       : String
+  kgCO2PerUnit  : Double
+  unit          : String
+  region        : String
+  lastUpdated   : Timestamp
+}
+
+entity "ACHIEVEMENT" as Achievement {
+  * **achievementId** : String <<PK>>
+  --
+  title         : String
+  description   : String
+  iconAsset     : String
+  thresholdCO2  : Double
+  badgeType     : Enum\n(bronze/silver/gold)
+}
+
+entity "USER_ACHIEVEMENT" as UserAchieve {
+  * **recordId**      : String <<PK>>
+  --
+  userId         : String <<FK>>
+  achievementId  : String <<FK>>
+  unlockedAt     : Timestamp
+}
+
+entity "BILL_SCAN" as BillScan {
+  * **scanId**     : String <<PK>>
+  --
+  userId        : String <<FK>>
+  logId         : String <<FK>>
+  imageUrl      : String
+  rawOcrText    : String
+  extractedKwh  : Double
+  scannedAt     : Timestamp
+}
+
+entity "TRIP" as Trip {
+  * **tripId**     : String <<PK>>
+  --
+  logId         : String <<FK>>
+  startLat      : Double
+  startLng      : Double
+  endLat        : Double
+  endLng        : Double
+  distanceKm    : Double
+  transportMode : String
+  startedAt     : Timestamp
+  endedAt       : Timestamp
+}
+
+' Relationships
+User          ||--o{ Activity      : "logs"
+Activity      }o--||  Factor       : "uses"
+User          ||--o{ UserAchieve   : "earns"
+Achievement   ||--o{ UserAchieve   : "awarded via"
+Activity      ||--o|  BillScan     : "captured by"
+Activity      ||--o|  Trip         : "derived from"
+User          ||--o{ BillScan      : "uploads"
+
+@enduml

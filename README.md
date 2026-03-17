@@ -27,6 +27,23 @@ The application is limited to personal carbon footprint tracking using mobile pl
 ### 1.5 Organization of the Report
 This document adheres to the standard software engineering report format, detailing the literature review, requirements specification, system design, implementation details, testing strategy, and concluding remarks.
 
+| Section | Title |
+|---------|-------|
+| 2 | Literature Review |
+| 3 | Software Requirements Specification (SRS) |
+| 4.1 | Overall System Architecture |
+| 4.2 | Module Description |
+| 4.3 | Data Flow Diagrams |
+| 4.3.1 | Level 0 DFD (Context Diagram) |
+| 4.3.2 | Level 1 DFD |
+| 4.4 | Use Case Diagram |
+| 4.5 | Sequence Diagram — CO2 Activity Logging Flow |
+| 4.6 | Entity-Relationship Diagram |
+| 5 | Implementation |
+| 6 | Testing |
+| 7 | Results & Discussion |
+| 8 | Conclusion & Future Works |
+
 ---
 
 ## 2. LITERATURE REVIEW
@@ -82,6 +99,321 @@ The application uses a modular Client-Server architecture. The Flutter client ha
 - **Dashboard Module:** Visualizes data using pie charts and graphs (`dashboard_page.dart`).
 - **Achievements Module:** Gamifies the experience (`achievements_page.dart`).
 - **Core Services:** Reusable business logic layers (`carbon_factors.dart`, `location_service.dart`, `suggestion_service.dart`).
+
+---
+
+### 4.3 Data Flow Diagrams
+
+> **Source files:** `docs/diagrams/dfd_level0.puml` / `dfd_level0.mmd` and `docs/diagrams/dfd_level1.puml` / `dfd_level1.mmd`
+>
+> **Render with:** [PlantUML](https://plantuml.com/), [Mermaid Live Editor](https://mermaid.live/), or ask Claude — paste the code block below and request a rendered PNG.
+
+#### 4.3.1 Level 0 DFD (Context Diagram)
+
+The context diagram shows the entire CO2 Tracker system as a single process, surrounded by the three external entities it interacts with.
+
+```mermaid
+flowchart TB
+    User(["👤 User"])
+    Firebase(["☁️ Firebase\nAuth / Firestore"])
+    Device(["📱 Device\nGPS / Camera"])
+
+    System["🌍 CO2 Tracker\nSystem\n[Process 0]"]
+
+    User -- "Login credentials\nActivity data\nBill images" --> System
+    System -- "Dashboard insights\nAchievements\nRecommendations" --> User
+
+    System -- "Auth requests\nActivity logs\nUser profile data" --> Firebase
+    Firebase -- "Auth tokens\nEmission records\nRemote config" --> System
+
+    Device -- "GPS coordinates\nCamera / gallery images" --> System
+    System -- "Location requests\nOCR scan triggers" --> Device
+
+    style System fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20
+    style User fill:#BBDEFB,stroke:#1565C0
+    style Firebase fill:#BBDEFB,stroke:#1565C0
+    style Device fill:#BBDEFB,stroke:#1565C0
+```
+
+#### 4.3.2 Level 1 DFD
+
+The Level 1 DFD decomposes the central process into the six primary functional modules and shows how data flows between them, the external actors, and the four Firestore data stores.
+
+```mermaid
+flowchart TD
+    User(["👤 User"])
+    FireAuth(["☁️ Firebase Auth"])
+    GPS(["📍 GPS Service"])
+    OCR(["🔍 ML Kit OCR"])
+
+    Auth["1.0\nAuthentication\nModule"]
+    ActivityLog["2.0\nActivity Logging\nModule"]
+    Scanner["3.0\nBill Scanning\nModule"]
+    Location["4.0\nLocation Tracking\nModule"]
+    Dashboard["5.0\nDashboard &\nAnalytics Module"]
+    Achievements["6.0\nAchievements\nModule"]
+
+    DB_Users[("D1: User\nProfiles")]
+    DB_Activity[("D2: Activity\nLogs")]
+    DB_Carbon[("D3: Carbon\nFactors")]
+    DB_Achieve[("D4: Achievements\nData")]
+
+    User -- "Credentials" --> Auth
+    Auth <--> FireAuth
+    Auth --> DB_Users
+    Auth --> Dashboard
+
+    User -- "Activity data" --> ActivityLog
+    ActivityLog --> DB_Carbon
+    DB_Carbon --> ActivityLog
+    ActivityLog --> DB_Activity
+    ActivityLog --> Dashboard
+
+    User -- "Bill image" --> Scanner
+    Scanner <--> OCR
+    Scanner --> DB_Activity
+
+    User -- "Start trip" --> Location
+    Location <--> GPS
+    Location --> ActivityLog
+
+    Dashboard --> DB_Activity
+    Dashboard -- "Charts & insights" --> User
+
+    DB_Activity --> Achievements
+    Achievements --> DB_Achieve
+    Achievements -- "Badge notifications" --> User
+
+    style Auth        fill:#FFF9C4,stroke:#F9A825
+    style ActivityLog fill:#FFF9C4,stroke:#F9A825
+    style Scanner     fill:#FFF9C4,stroke:#F9A825
+    style Location    fill:#FFF9C4,stroke:#F9A825
+    style Dashboard   fill:#FFF9C4,stroke:#F9A825
+    style Achievements fill:#FFF9C4,stroke:#F9A825
+
+    style DB_Users    fill:#FCE4EC,stroke:#C62828
+    style DB_Activity fill:#FCE4EC,stroke:#C62828
+    style DB_Carbon   fill:#FCE4EC,stroke:#C62828
+    style DB_Achieve  fill:#FCE4EC,stroke:#C62828
+
+    style User     fill:#BBDEFB,stroke:#1565C0
+    style FireAuth fill:#BBDEFB,stroke:#1565C0
+    style GPS      fill:#BBDEFB,stroke:#1565C0
+    style OCR      fill:#BBDEFB,stroke:#1565C0
+```
+
+---
+
+### 4.4 Use Case Diagram
+
+> **Source files:** `docs/diagrams/use_case.puml` / `use_case.mmd`
+
+```mermaid
+flowchart LR
+    User(["👤 User"])
+    FireAuth(["☁️ Firebase Auth"])
+    GPS(["📍 GPS Service"])
+    OCR(["🔍 ML Kit OCR"])
+
+    subgraph APP ["CO2 Tracker Application"]
+        direction TB
+        UC1(["Register Account"])
+        UC2(["Login / Logout"])
+        UC3(["Reset Password"])
+        UC4(["Log Transport Activity"])
+        UC5(["Log Energy Consumption"])
+        UC6(["Log Dietary Activity"])
+        UC7(["Scan Utility Bill"])
+        UC8(["Auto-Track Trip Distance"])
+        UC9(["View Dashboard & Charts"])
+        UC10(["View Emission History"])
+        UC11(["Get Personalised Tips"])
+        UC12(["Earn Achievements / Badges"])
+        UC13(["View Profile"])
+    end
+
+    User --- UC1
+    User --- UC2
+    User --- UC3
+    User --- UC4
+    User --- UC5
+    User --- UC6
+    User --- UC7
+    User --- UC8
+    User --- UC9
+    User --- UC10
+    User --- UC11
+    User --- UC12
+    User --- UC13
+
+    UC1 -. "«uses»" .-> FireAuth
+    UC2 -. "«uses»" .-> FireAuth
+    UC3 -. "«uses»" .-> FireAuth
+    UC7 -. "«uses»" .-> OCR
+    UC8 -. "«uses»" .-> GPS
+
+    UC8 -. "«include»" .-> UC4
+    UC9 -. "«include»" .-> UC11
+    UC9 -. "«include»" .-> UC12
+    UC4 -. "«extend»" .-> UC9
+    UC5 -. "«extend»" .-> UC9
+    UC6 -. "«extend»" .-> UC9
+    UC7 -. "«extend»" .-> UC9
+
+    style User     fill:#BBDEFB,stroke:#1565C0
+    style FireAuth fill:#BBDEFB,stroke:#1565C0
+    style GPS      fill:#BBDEFB,stroke:#1565C0
+    style OCR      fill:#BBDEFB,stroke:#1565C0
+```
+
+---
+
+### 4.5 Sequence Diagram — CO2 Activity Logging Flow
+
+> **Source files:** `docs/diagrams/sequence_activity_logging.puml` / `sequence_activity_logging.mmd`
+
+The sequence diagram traces the end-to-end lifecycle of a user logging a carbon-emitting activity — from form submission through emission calculation, Firebase persistence, dashboard refresh, and achievement checking.
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant App as Flutter App
+    participant LogPage as Activity Logging Page
+    participant Validator as Validation Layer
+    participant CarbonSvc as Carbon Factors Service
+    participant Firestore as Firebase Firestore
+    participant Dashboard as Dashboard Page
+    participant AchieveSvc as Achievement Service
+
+    Note over User,App: User Initiates Activity Logging
+    User->>App: Tap "Log Activity"
+    App->>LogPage: Navigate to logging screen
+    LogPage-->>User: Display activity form (Transport/Energy/Diet)
+    User->>LogPage: Enter activity details (e.g., 15 km by car)
+
+    Note over LogPage,Validator: Input Validation
+    LogPage->>Validator: validate(activityData)
+    alt Invalid input
+        Validator-->>LogPage: Return validation errors
+        LogPage-->>User: Show error messages
+    else Valid input
+        Validator-->>LogPage: Input approved
+    end
+
+    Note over LogPage,CarbonSvc: Emission Calculation
+    LogPage->>CarbonSvc: fetchEmissionFactor(activityType, subType)
+    CarbonSvc-->>LogPage: Return factor (e.g., 0.21 kg CO2/km)
+    LogPage->>LogPage: Calculate total CO2\n(15 km × 0.21 = 3.15 kg CO2)
+
+    Note over LogPage,Firestore: Persist Data to Firebase
+    LogPage->>Firestore: saveActivityLog(userId, activityData, co2Kg)
+    Note right of Firestore: Collection: activity_logs<br/>Fields: userId, type, value,<br/>co2_kg, timestamp
+    Firestore-->>LogPage: Write confirmed (document ID)
+
+    Note over Dashboard,Firestore: Update Dashboard
+    LogPage->>Dashboard: emit activityLogged event
+    Dashboard->>Firestore: fetchEmissionHistory(userId)
+    Firestore-->>Dashboard: Latest emission records
+    Dashboard-->>User: Refresh charts & cumulative CO2
+
+    Note over AchieveSvc,User: Check Achievements
+    Dashboard->>AchieveSvc: checkMilestones(userId, totalCO2)
+    alt Milestone reached
+        AchieveSvc->>Firestore: unlockAchievement(userId, badgeId)
+        Firestore-->>AchieveSvc: Confirmed
+        AchieveSvc-->>User: 🏆 Badge notification "Green Commuter Unlocked!"
+    else No milestone
+        AchieveSvc-->>Dashboard: No new achievements
+    end
+```
+
+---
+
+### 4.6 Entity-Relationship Diagram
+
+> **Source files:** `docs/diagrams/er_diagram.puml` / `er_diagram.mmd`
+
+```mermaid
+erDiagram
+    USER {
+        string userId PK
+        string email
+        string phoneNumber
+        string displayName
+        string photoUrl
+        timestamp createdAt
+        string countryCode
+    }
+
+    ACTIVITY_LOG {
+        string logId PK
+        string userId FK
+        string activityType
+        string subType
+        double inputValue
+        string inputUnit
+        double co2Kg
+        string source
+        timestamp loggedAt
+    }
+
+    EMISSION_FACTOR {
+        string factorId PK
+        string activityType
+        string subType
+        double kgCO2PerUnit
+        string unit
+        string region
+        timestamp lastUpdated
+    }
+
+    ACHIEVEMENT {
+        string achievementId PK
+        string title
+        string description
+        string iconAsset
+        double thresholdCO2
+        string badgeType
+    }
+
+    USER_ACHIEVEMENT {
+        string recordId PK
+        string userId FK
+        string achievementId FK
+        timestamp unlockedAt
+    }
+
+    BILL_SCAN {
+        string scanId PK
+        string userId FK
+        string logId FK
+        string imageUrl
+        string rawOcrText
+        double extractedKwh
+        timestamp scannedAt
+    }
+
+    TRIP {
+        string tripId PK
+        string logId FK
+        double startLat
+        double startLng
+        double endLat
+        double endLng
+        double distanceKm
+        string transportMode
+        timestamp startedAt
+        timestamp endedAt
+    }
+
+    USER           ||--o{ ACTIVITY_LOG     : "logs"
+    ACTIVITY_LOG   }o--||  EMISSION_FACTOR  : "uses"
+    USER           ||--o{ USER_ACHIEVEMENT  : "earns"
+    ACHIEVEMENT    ||--o{ USER_ACHIEVEMENT  : "awarded via"
+    ACTIVITY_LOG   ||--o|  BILL_SCAN        : "captured by"
+    ACTIVITY_LOG   ||--o|  TRIP             : "derived from"
+    USER           ||--o{ BILL_SCAN         : "uploads"
+```
 
 ---
 

@@ -1,0 +1,61 @@
+---
+title: Use Case Diagram — CO2 Tracker Application
+---
+flowchart LR
+    User(["👤 User"])
+    FireAuth(["☁️ Firebase Auth"])
+    GPS(["📍 GPS Service"])
+    OCR(["🔍 ML Kit OCR"])
+
+    subgraph APP ["CO2 Tracker Application"]
+        direction TB
+        UC1(["Register Account"])
+        UC2(["Login / Logout"])
+        UC3(["Reset Password"])
+        UC4(["Log Transport Activity"])
+        UC5(["Log Energy Consumption"])
+        UC6(["Log Dietary Activity"])
+        UC7(["Scan Utility Bill"])
+        UC8(["Auto-Track Trip Distance"])
+        UC9(["View Dashboard & Charts"])
+        UC10(["View Emission History"])
+        UC11(["Get Personalised Tips"])
+        UC12(["Earn Achievements / Badges"])
+        UC13(["View Profile"])
+    end
+
+    %% User associations
+    User --- UC1
+    User --- UC2
+    User --- UC3
+    User --- UC4
+    User --- UC5
+    User --- UC6
+    User --- UC7
+    User --- UC8
+    User --- UC9
+    User --- UC10
+    User --- UC11
+    User --- UC12
+    User --- UC13
+
+    %% External actor associations
+    UC1 -. "«uses»" .-> FireAuth
+    UC2 -. "«uses»" .-> FireAuth
+    UC3 -. "«uses»" .-> FireAuth
+    UC7 -. "«uses»" .-> OCR
+    UC8 -. "«uses»" .-> GPS
+
+    %% Include / extend relationships
+    UC8 -. "«include»" .-> UC4
+    UC9 -. "«include»" .-> UC11
+    UC9 -. "«include»" .-> UC12
+    UC4 -. "«extend»" .-> UC9
+    UC5 -. "«extend»" .-> UC9
+    UC6 -. "«extend»" .-> UC9
+    UC7 -. "«extend»" .-> UC9
+
+    style User     fill:#BBDEFB,stroke:#1565C0
+    style FireAuth fill:#BBDEFB,stroke:#1565C0
+    style GPS      fill:#BBDEFB,stroke:#1565C0
+    style OCR      fill:#BBDEFB,stroke:#1565C0

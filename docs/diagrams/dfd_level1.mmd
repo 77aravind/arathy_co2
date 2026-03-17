@@ -1,0 +1,69 @@
+---
+title: Level 1 DFD — CO2 Tracker Application
+---
+flowchart TD
+    User(["👤 User"])
+    FireAuth(["☁️ Firebase Auth"])
+    GPS(["📍 GPS Service"])
+    OCR(["🔍 ML Kit OCR"])
+
+    Auth["1.0\nAuthentication\nModule"]
+    ActivityLog["2.0\nActivity Logging\nModule"]
+    Scanner["3.0\nBill Scanning\nModule"]
+    Location["4.0\nLocation Tracking\nModule"]
+    Dashboard["5.0\nDashboard &\nAnalytics Module"]
+    Achievements["6.0\nAchievements\nModule"]
+
+    DB_Users[("D1: User\nProfiles")]
+    DB_Activity[("D2: Activity\nLogs")]
+    DB_Carbon[("D3: Carbon\nFactors")]
+    DB_Achieve[("D4: Achievements\nData")]
+
+    %% Authentication
+    User -- "Credentials" --> Auth
+    Auth <--> FireAuth
+    Auth --> DB_Users
+    Auth --> Dashboard
+
+    %% Activity Logging
+    User -- "Activity data" --> ActivityLog
+    ActivityLog --> DB_Carbon
+    DB_Carbon --> ActivityLog
+    ActivityLog --> DB_Activity
+    ActivityLog --> Dashboard
+
+    %% Scanner
+    User -- "Bill image" --> Scanner
+    Scanner <--> OCR
+    Scanner --> DB_Activity
+
+    %% Location
+    User -- "Start trip" --> Location
+    Location <--> GPS
+    Location --> ActivityLog
+
+    %% Dashboard
+    Dashboard --> DB_Activity
+    Dashboard -- "Charts & insights" --> User
+
+    %% Achievements
+    DB_Activity --> Achievements
+    Achievements --> DB_Achieve
+    Achievements -- "Badge notifications" --> User
+
+    style Auth       fill:#FFF9C4,stroke:#F9A825
+    style ActivityLog fill:#FFF9C4,stroke:#F9A825
+    style Scanner    fill:#FFF9C4,stroke:#F9A825
+    style Location   fill:#FFF9C4,stroke:#F9A825
+    style Dashboard  fill:#FFF9C4,stroke:#F9A825
+    style Achievements fill:#FFF9C4,stroke:#F9A825
+
+    style DB_Users   fill:#FCE4EC,stroke:#C62828
+    style DB_Activity fill:#FCE4EC,stroke:#C62828
+    style DB_Carbon  fill:#FCE4EC,stroke:#C62828
+    style DB_Achieve fill:#FCE4EC,stroke:#C62828
+
+    style User     fill:#BBDEFB,stroke:#1565C0
+    style FireAuth fill:#BBDEFB,stroke:#1565C0
+    style GPS      fill:#BBDEFB,stroke:#1565C0
+    style OCR      fill:#BBDEFB,stroke:#1565C0

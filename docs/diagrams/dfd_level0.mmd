@@ -1,0 +1,23 @@
+---
+title: Level 0 DFD — Context Diagram (CO2 Tracker Application)
+---
+flowchart TB
+    User(["👤 User"])
+    Firebase(["☁️ Firebase\nAuth / Firestore"])
+    Device(["📱 Device\nGPS / Camera"])
+
+    System["🌍 CO2 Tracker\nSystem\n[Process 0]"]
+
+    User -- "Login credentials\nActivity data\nBill images" --> System
+    System -- "Dashboard insights\nAchievements\nRecommendations" --> User
+
+    System -- "Auth requests\nActivity logs\nUser profile data" --> Firebase
+    Firebase -- "Auth tokens\nEmission records\nRemote config" --> System
+
+    Device -- "GPS coordinates\nCamera / gallery images" --> System
+    System -- "Location requests\nOCR scan triggers" --> Device
+
+    style System fill:#C8E6C9,stroke:#388E3C,stroke-width:2px,color:#1B5E20
+    style User fill:#BBDEFB,stroke:#1565C0
+    style Firebase fill:#BBDEFB,stroke:#1565C0
+    style Device fill:#BBDEFB,stroke:#1565C0

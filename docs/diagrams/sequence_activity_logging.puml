@@ -1,0 +1,73 @@
+@startuml Sequence_Diagram_Activity_Logging
+title Sequence Diagram — CO2 Activity Logging Flow
+
+skinparam sequence {
+  ParticipantBackgroundColor #E3F2FD
+  ParticipantBorderColor #1565C0
+  ActorBackgroundColor #E8F5E9
+  ActorBorderColor #2E7D32
+  ArrowColor #37474F
+  LifeLineBorderColor #90A4AE
+  NoteBackgroundColor #FFFDE7
+  NoteBorderColor #F9A825
+  FontSize 12
+}
+
+actor "User" as User
+participant "Flutter App\n(UI Layer)" as App
+participant "Activity\nLogging Page" as LogPage
+participant "Carbon\nFactors Service" as CarbonSvc
+participant "Validation\nLayer" as Validator
+participant "Firebase\nFirestore" as Firestore
+participant "Dashboard\nPage" as Dashboard
+participant "Achievement\nService" as AchieveSvc
+
+== User Initiates Activity Logging ==
+
+User -> App : Tap "Log Activity"
+App -> LogPage : Navigate to logging screen
+LogPage --> User : Display activity form\n(Transport / Energy / Diet)
+
+User -> LogPage : Enter activity details\n(e.g., 15 km by car)
+
+== Emission Calculation ==
+
+LogPage -> Validator : Validate input fields
+alt Invalid input
+  Validator --> LogPage : Return validation errors
+  LogPage --> User : Show error message
+else Valid input
+  Validator --> LogPage : Input approved
+  LogPage -> CarbonSvc : fetchEmissionFactor(activityType)
+  CarbonSvc --> LogPage : Return factor\n(e.g., 0.21 kg CO2/km)
+  LogPage -> LogPage : Calculate total emissions\n(15 km × 0.21 = 3.15 kg CO2)
+end
+
+== Persist Data to Firebase ==
+
+LogPage -> Firestore : saveActivityLog(userId, activityData, co2Kg)
+note right of Firestore
+  Collection: "activity_logs"
+  Fields: userId, type, value,
+  co2_kg, timestamp
+end note
+Firestore --> LogPage : Write confirmed (document ID)
+
+== Update Dashboard ==
+
+LogPage -> Dashboard : Emit event: activityLogged
+Dashboard -> Firestore : fetchEmissionHistory(userId)
+Firestore --> Dashboard : Latest emission records
+Dashboard --> User : Refresh charts & total CO2
+
+== Check Achievements ==
+
+Dashboard -> AchieveSvc : checkMilestones(userId, totalCO2)
+alt Milestone reached
+  AchieveSvc -> Firestore : unlockAchievement(userId, badgeId)
+  AchieveSvc --> User : Show badge notification\n"🏆 Green Commuter Unlocked!"
+else No milestone
+  AchieveSvc --> Dashboard : No new achievements
+end
+
+@enduml

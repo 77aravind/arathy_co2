@@ -1,0 +1,33 @@
+@startuml DFD_Level0_Context_Diagram
+title Level 0 DFD — Context Diagram\nCO2 Tracker Application
+
+skinparam rectangle {
+  BackgroundColor #E8F5E9
+  BorderColor #388E3C
+  FontSize 13
+}
+skinparam actor {
+  BackgroundColor #E3F2FD
+  BorderColor #1976D2
+}
+skinparam arrow {
+  Color #546E7A
+  FontSize 11
+}
+
+actor "User" as User
+actor "Firebase\n(Auth / Firestore)" as Firebase
+actor "Device\n(GPS / Camera)" as Device
+
+rectangle "CO2 Tracker\nSystem\n\n[0]" as System
+
+User --> System : Login credentials\nActivity data\nBill images
+System --> User : Dashboard insights\nAchievements\nRecommendations
+
+System --> Firebase : Authentication requests\nActivity logs (read/write)\nUser profile data
+Firebase --> System : Auth tokens\nStored emission records\nRemote configuration
+
+Device --> System : GPS coordinates\nCamera / gallery images
+System --> Device : Location requests\nOCR scan triggers
+
+@enduml

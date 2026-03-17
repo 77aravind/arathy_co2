@@ -1,0 +1,53 @@
+---
+title: Sequence Diagram — CO2 Activity Logging Flow
+---
+sequenceDiagram
+    actor User
+    participant App as Flutter App
+    participant LogPage as Activity Logging Page
+    participant Validator as Validation Layer
+    participant CarbonSvc as Carbon Factors Service
+    participant Firestore as Firebase Firestore
+    participant Dashboard as Dashboard Page
+    participant AchieveSvc as Achievement Service
+
+    Note over User,App: User Initiates Activity Logging
+    User->>App: Tap "Log Activity"
+    App->>LogPage: Navigate to logging screen
+    LogPage-->>User: Display activity form (Transport/Energy/Diet)
+    User->>LogPage: Enter activity details (e.g., 15 km by car)
+
+    Note over LogPage,Validator: Input Validation
+    LogPage->>Validator: validate(activityData)
+    alt Invalid input
+        Validator-->>LogPage: Return validation errors
+        LogPage-->>User: Show error messages
+    else Valid input
+        Validator-->>LogPage: Input approved
+    end
+
+    Note over LogPage,CarbonSvc: Emission Calculation
+    LogPage->>CarbonSvc: fetchEmissionFactor(activityType, subType)
+    CarbonSvc-->>LogPage: Return factor (e.g., 0.21 kg CO2/km)
+    LogPage->>LogPage: Calculate total CO2\n(15 km × 0.21 = 3.15 kg CO2)
+
+    Note over LogPage,Firestore: Persist Data to Firebase
+    LogPage->>Firestore: saveActivityLog(userId, activityData, co2Kg)
+    Note right of Firestore: Collection: activity_logs<br/>Fields: userId, type, value,<br/>co2_kg, timestamp
+    Firestore-->>LogPage: Write confirmed (document ID)
+
+    Note over Dashboard,Firestore: Update Dashboard
+    LogPage->>Dashboard: emit activityLogged event
+    Dashboard->>Firestore: fetchEmissionHistory(userId)
+    Firestore-->>Dashboard: Latest emission records
+    Dashboard-->>User: Refresh charts & cumulative CO2
+
+    Note over AchieveSvc,User: Check Achievements
+    Dashboard->>AchieveSvc: checkMilestones(userId, totalCO2)
+    alt Milestone reached
+        AchieveSvc->>Firestore: unlockAchievement(userId, badgeId)
+        Firestore-->>AchieveSvc: Confirmed
+        AchieveSvc-->>User: 🏆 Badge notification "Green Commuter Unlocked!"
+    else No milestone
+        AchieveSvc-->>Dashboard: No new achievements
+    end

@@ -1,0 +1,82 @@
+---
+title: Entity-Relationship Diagram — CO2 Tracker Application
+---
+erDiagram
+    USER {
+        string userId PK
+        string email
+        string phoneNumber
+        string displayName
+        string photoUrl
+        timestamp createdAt
+        string countryCode
+    }
+
+    ACTIVITY_LOG {
+        string logId PK
+        string userId FK
+        string activityType
+        string subType
+        double inputValue
+        string inputUnit
+        double co2Kg
+        string source
+        timestamp loggedAt
+    }
+
+    EMISSION_FACTOR {
+        string factorId PK
+        string activityType
+        string subType
+        double kgCO2PerUnit
+        string unit
+        string region
+        timestamp lastUpdated
+    }
+
+    ACHIEVEMENT {
+        string achievementId PK
+        string title
+        string description
+        string iconAsset
+        double thresholdCO2
+        string badgeType
+    }
+
+    USER_ACHIEVEMENT {
+        string recordId PK
+        string userId FK
+        string achievementId FK
+        timestamp unlockedAt
+    }
+
+    BILL_SCAN {
+        string scanId PK
+        string userId FK
+        string logId FK
+        string imageUrl
+        string rawOcrText
+        double extractedKwh
+        timestamp scannedAt
+    }
+
+    TRIP {
+        string tripId PK
+        string logId FK
+        double startLat
+        double startLng
+        double endLat
+        double endLng
+        double distanceKm
+        string transportMode
+        timestamp startedAt
+        timestamp endedAt
+    }
+
+    USER           ||--o{ ACTIVITY_LOG     : "logs"
+    ACTIVITY_LOG   }o--||  EMISSION_FACTOR  : "uses"
+    USER           ||--o{ USER_ACHIEVEMENT  : "earns"
+    ACHIEVEMENT    ||--o{ USER_ACHIEVEMENT  : "awarded via"
+    ACTIVITY_LOG   ||--o|  BILL_SCAN        : "captured by"
+    ACTIVITY_LOG   ||--o|  TRIP             : "derived from"
+    USER           ||--o{ BILL_SCAN         : "uploads"
